@@ -12,7 +12,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".RecongnitionActivity">
+        <activity android:name=".RecognitionActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
