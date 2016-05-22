@@ -1,15 +1,21 @@
 package edu.xlaiscu.gardenreminding;
 
 import android.Manifest;
+import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -19,11 +25,27 @@ import static android.provider.MediaStore.Images.Media;
 
 
 import com.clarifai.api.ClarifaiClient;
+import com.clarifai.api.RecognitionRequest;
+import com.clarifai.api.RecognitionResult;
+import com.clarifai.api.Tag;
+import com.clarifai.api.exception.ClarifaiException;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class RecognitionActivity extends AppCompatActivity implements View.OnClickListener{
+public class RecognitionActivity extends AppCompatActivity {
+
+    final CharSequence[] items = { "Take Photo", "Choose from Library", "Cancel" };
+    final int REQUEST_CAMERA = 0;
+    final int SELECT_FILE = 1;
+
+    private String userChoosenTask;
 
     private static final String TAG = RecognitionActivity.class.getSimpleName();
     private static final int CODE_PICK = 1;
@@ -31,67 +53,181 @@ public class RecognitionActivity extends AppCompatActivity implements View.OnCli
             Credentials.CLIENT_SECRET);
 
     private Button selectPicButton;
-    private Button takePicButton;
     private ImageView imageView;
     private TextView tagOutput;
+    private Bitmap bitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_recognition);
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(RecognitionActivity.this);
+        builder.setTitle("Add Photo!");
+        boolean result = Utility.checkPermission(RecognitionActivity.this);
+
         imageView = (ImageView) findViewById(R.id.imageView);
         tagOutput = (TextView) findViewById(R.id.tagOutput);
-        selectPicButton = (Button) findViewById(R.id.selectPicButton);
-        selectPicButton.setOnClickListener(this);
-
-        takePicButton = (Button) findViewById(R.id.takePicButton);
-        takePicButton.setOnClickListener(this);
+        selectPicButton = (Button) findViewById(R.id.btnSelectPhoto);
+        selectPicButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                selectImage();
+            }
+        });
 
         acquireRunTimePermissions();
 
     }
 
     @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.selectPicButton:
-                final Intent selectPicIntent = new Intent(Intent.ACTION_PICK, Media.EXTERNAL_CONTENT_URI);
-                startActivityForResult(selectPicIntent, CODE_PICK);
-                break;
-            case R.id.takePicButton:
-                final Intent takePicIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                if (takePicIntent.resolveActivity(getPackageManager()) == null) {
-                    toast("Cannot take pictures on this device!");
-                    return;
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == SELECT_FILE) {
+                onSelectFromGalleryResult(data);
+            }
+            else if (requestCode == REQUEST_CAMERA) {
+                onCaptureImageResult(data);
+            }
+        }
+
+        if (bitmap != null) {
+            imageView.setImageBitmap(bitmap);
+            tagOutput.setText("Recognizing...");
+            selectPicButton.setEnabled(false);
+
+            // Run recognition on a background thread since it makes a network call.
+            new AsyncTask<Bitmap, Void, RecognitionResult>() {
+                @Override protected RecognitionResult doInBackground(Bitmap... bitmaps) {
+                    return recognizeBitmap(bitmaps[0]);
                 }
-                String fileName = getOutputFileName();
-                takePicIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.parse(fileName));
-                startActivityForResult(takePicIntent, CODE_PICK);
-                break;
+                @Override protected void onPostExecute(RecognitionResult result) {
+                    updateUIForResult(result);
+                }
+            }.execute(bitmap);
 
+        }
+        else {
+            tagOutput.setText("Unable to load selected image.");
+        }
+
+    }
+
+    @SuppressWarnings("deprecation")
+    private void onSelectFromGalleryResult(Intent data) {
+        bitmap = null;
+        if (data != null) {
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(getApplicationContext().getContentResolver(), data.getData());
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        imageView.setImageBitmap(bitmap);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void onCaptureImageResult(Intent data) {
+        Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+        File destination = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), System.currentTimeMillis() + ".jpg");
+        FileOutputStream fo;
+        try {
+            destination.createNewFile();
+            fo = new FileOutputStream(destination);
+            fo.write(bytes.toByteArray());
+            fo.close();
+        }
+        catch(FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        imageView.setImageBitmap(thumbnail);
+    }
+
+    /** Sends the given bitmap to Clarifai for recognition and returns the result. */
+    private RecognitionResult recognizeBitmap(Bitmap bitmap) {
+        try {
+            // Scale down the image. This step is optional. However, sending large images over the
+            // network is slow and  does not significantly improve recognition performance.
+            Bitmap scaled = Bitmap.createScaledBitmap(bitmap, 320,
+                    320 * bitmap.getHeight() / bitmap.getWidth(), true);
+
+            // Compress the image as a JPEG.
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            scaled.compress(Bitmap.CompressFormat.JPEG, 90, out);
+            byte[] jpeg = out.toByteArray();
+
+            // Send the JPEG to Clarifai and return the result.
+            return client.recognize(new RecognitionRequest(jpeg)).get(0);
+        } catch (ClarifaiException e) {
+            Log.e(TAG, "Clarifai error", e);
+            return null;
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
-        if (requestCode == CODE_PICK && resultCode == RESULT_OK) {
-
-
+    /** Updates the UI by displaying tags for the given result. */
+    private void updateUIForResult(RecognitionResult result) {
+        if (result != null) {
+            if (result.getStatusCode() == RecognitionResult.StatusCode.OK) {
+                // Display the list of tags in the UI.
+                StringBuilder b = new StringBuilder();
+                for (Tag tag : result.getTags()) {
+                    b.append(b.length() > 0 ? ", " : "").append(tag.getName());
+                }
+                tagOutput.setText("Tags:\n" + b);
+            } else {
+                Log.e(TAG, "Clarifai: " + result.getStatusMessage());
+                tagOutput.setText("Sorry, there was an error recognizing your image.");
+            }
+        } else {
+            tagOutput.setText("Sorry, there was an error recognizing your image.");
         }
+        selectPicButton.setEnabled(true);
     }
 
-    private String getOutputFileName() {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String fileName =
-                "file://"
-                + Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                + "/BMP_"
-                + timeStamp
-                + ".bmp";
-        return fileName;
+    private void selectImage() {
+        final CharSequence[] items = { "Take Photo", "Choose from Library", "Cancel" };
+        AlertDialog.Builder builder = new AlertDialog.Builder(RecognitionActivity.this);
+        builder.setTitle("Add Photo!");
+        builder.setItems(items, new android.content.DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int item) {
+                boolean result = Utility.checkPermission(RecognitionActivity.this);
+                if (items[item].equals("Take Photo")) {
+                    userChoosenTask = "Take Photo";
+                    if (result)
+                        cameraIntent();
+                } else if (items[item].equals("Choose from Library")) {
+                    userChoosenTask = "Choose from Library";
+                    if (result)
+                        galleryIntent();
+                } else if (items[item].equals("Cancel")) {
+                    dialog.dismiss();
+                }
+            }
+        });
+        builder.show();
     }
 
+
+    private void cameraIntent() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(intent, REQUEST_CAMERA);
+    }
+
+    private void galleryIntent() {
+        Intent intent = new Intent();
+        intent.setType("image/*");
+        intent.setAction(Intent.ACTION_GET_CONTENT);
+        startActivityForResult(Intent.createChooser(intent, "Select File"), SELECT_FILE);
+    }
 
 
     private void acquireRunTimePermissions() {
@@ -103,17 +239,23 @@ public class RecognitionActivity extends AppCompatActivity implements View.OnCli
         }
     }
 
+
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        if (requestCode != 111) return;
-        if (grantResults.length >= 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(getApplicationContext(), "Great! We have the permission!", Toast.LENGTH_SHORT).show();
-        } else {
-            Toast.makeText(getApplicationContext(), "Cannot write to external storage! App will not work properly!", Toast.LENGTH_SHORT).show();
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case Utility.MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    if(userChoosenTask.equals("Take Photo"))
+                        cameraIntent();
+                    else if(userChoosenTask.equals("Choose from Library"))
+                        galleryIntent();
+                } else {
+                    Toast.makeText(getApplicationContext(), "Cannot write to external storage! App will not work properly!", Toast.LENGTH_SHORT).show();
+                }
+                break;
         }
     }
-
-
 
 
 
