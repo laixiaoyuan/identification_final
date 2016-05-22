@@ -11,6 +11,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.Hashtable;
+
 /**
  * Created by mingming on 5/9/16.
  */
@@ -96,5 +99,31 @@ public class PlantDBHelper extends SQLiteOpenHelper {
         String SQL_DELETE="DELETE FROM contact WHERE _id=" + id + ";";
         db.execSQL(SQL_DELETE);
          */
+    }
+
+    public Hashtable<String, String> fetchPlantName() {
+        Hashtable<String, String> plantNameHash = new Hashtable<String, String>();
+        SQLiteDatabase db = this.getReadableDatabase();
+
+//        Cursor result = db.query(true, "plant", new String[] {"plantName"}, null, null, null, null, null, null);
+//        if (result.moveToFirst()) {
+//            do {
+//                plantNameHash.put(result.getString(result.getColumnIndex("plantName")), );
+//            } while (result.moveToNext());
+//        }
+//        else {
+//            return null;
+//        }
+//        return plantNameHash;
+        Cursor cursor = fetchAll();
+        if (cursor.moveToFirst()) {
+            do {
+                plantNameHash.put(cursor.getString(cursor.getColumnIndex("PlantName")), cursor.getString(cursor.getColumnIndex("PhotoPath")));
+            } while (cursor.moveToNext());
+        }
+        else {
+            return null;
+        }
+        return plantNameHash;
     }
 }

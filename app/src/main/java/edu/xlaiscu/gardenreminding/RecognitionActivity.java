@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -30,6 +31,9 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Hashtable;
 
 
 public class RecognitionActivity extends AppCompatActivity {
@@ -50,6 +54,9 @@ public class RecognitionActivity extends AppCompatActivity {
     private TextView tagOutput;
     private Bitmap bitmap;
 
+    PlantDBHelper dbHelper;
+    Hashtable<String, String> plantNameHash = new Hashtable<String, String>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +75,9 @@ public class RecognitionActivity extends AppCompatActivity {
                 selectImage();
             }
         });
+
+        dbHelper = new PlantDBHelper(this);
+        plantNameHash = dbHelper.fetchPlantName();
 
         acquireRunTimePermissions();
 
@@ -170,11 +180,23 @@ public class RecognitionActivity extends AppCompatActivity {
         if (result != null) {
             if (result.getStatusCode() == RecognitionResult.StatusCode.OK) {
                 // Display the list of tags in the UI.
-                StringBuilder b = new StringBuilder();
+//                StringBuilder b = new StringBuilder();
+//                for (Tag tag : result.getTags()) {
+//                    b.append(b.length() > 0 ? ", " : "").append(tag.getName());
+//                }
+//                tagOutput.setText("Tags:\n" + b);
+
+                ArrayList<String> tagArraylist = new ArrayList<String>();
                 for (Tag tag : result.getTags()) {
-                    b.append(b.length() > 0 ? ", " : "").append(tag.getName());
+                    tagArraylist.add(tag.getName());
                 }
-                tagOutput.setText("Tags:\n" + b);
+                for (int i = 0; i < tagArraylist.size(); i++) {
+                    if (plantNameHash.containsKey(tagArraylist.get(i))) {
+                        
+                    }
+                }
+
+
             } else {
                 Log.e(TAG, "Clarifai: " + result.getStatusMessage());
                 tagOutput.setText("Sorry, there was an error recognizing your image.");
