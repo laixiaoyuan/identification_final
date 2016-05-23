@@ -55,7 +55,7 @@ public class PlantDBHelper extends SQLiteOpenHelper {
 
     public int getMaxRecID() {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT MAX(_id) FROM photo;", null);
+        Cursor cursor = db.rawQuery("SELECT MAX(_id) FROM plant;", null);
 
         if (cursor.getCount() == 0) {
             return 0;
@@ -67,7 +67,7 @@ public class PlantDBHelper extends SQLiteOpenHelper {
 
     public Cursor fetchAll() {
         SQLiteDatabase db = this.getReadableDatabase();
-        return db.rawQuery("SELECT * FROM photo;", null);
+        return db.rawQuery("SELECT * FROM plant;", null);
     }
 
     public void add(Plant pi) {
@@ -115,7 +115,7 @@ public class PlantDBHelper extends SQLiteOpenHelper {
 //            return null;
 //        }
 //        return plantNameHash;
-        Cursor cursor = fetchAll();
+        Cursor cursor = db.rawQuery("SELECT * FROM plant;", null);
         if (cursor.moveToFirst()) {
             do {
                 plantNameHash.put(cursor.getString(cursor.getColumnIndex("PlantName")), cursor.getString(cursor.getColumnIndex("PhotoPath")));

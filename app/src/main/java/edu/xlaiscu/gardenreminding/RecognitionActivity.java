@@ -32,6 +32,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.net.IDN;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
@@ -54,8 +55,10 @@ public class RecognitionActivity extends AppCompatActivity {
     private TextView tagOutput;
     private Bitmap bitmap;
 
-    PlantDBHelper dbHelper;
-    Hashtable<String, String> plantNameHash = new Hashtable<String, String>();
+    PlantInfoDBHelper plantInfoDBHelper;
+    IdentifyOutcomeDBHelper outcomeDBHelper;
+    Hashtable<String, String> plantNameHash;
+    Cursor cursor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,8 +79,10 @@ public class RecognitionActivity extends AppCompatActivity {
             }
         });
 
-        dbHelper = new PlantDBHelper(this);
-        plantNameHash = dbHelper.fetchPlantName();
+        plantInfoDBHelper = new PlantInfoDBHelper(this);
+        outcomeDBHelper = new IdentifyOutcomeDBHelper(this);
+        plantNameHash = plantInfoDBHelper.fetchPlantName();
+        cursor = outcomeDBHelper.fetchAll();
 
         acquireRunTimePermissions();
 
@@ -186,15 +191,36 @@ public class RecognitionActivity extends AppCompatActivity {
 //                }
 //                tagOutput.setText("Tags:\n" + b);
 
+                // tagArraylist to hold every tag we get from the server
                 ArrayList<String> tagArraylist = new ArrayList<String>();
                 for (Tag tag : result.getTags()) {
                     tagArraylist.add(tag.getName());
                 }
+
                 for (int i = 0; i < tagArraylist.size(); i++) {
-                    if (plantNameHash.containsKey(tagArraylist.get(i))) {
-                        
+                    if (plantNameHash.size() == 0 || plantNameHash == null) {
+                        break;
                     }
+
+                    if (plantNameHash.containsKey(tagArraylist.get(i))) {
+//                        possibleOutcome.put(tagArraylist.get(i), plantNameHash.get(tagArraylist.get(i)));
+                        Plant plant = new Plant();
+                        plant.plantName = tagArraylist.get(i);
+
+                        plant.photoPath = plantNameHash.get(tagArraylist.get(i));
+                        outcomeDBHelper.add(plant);
+                        cursor.requery();
+                    }
+
                 }
+                if (outcomeDBHelper.getMaxRecID() == 0) {
+                    tagOutput.setText("Cannot recognize the flower, or the flower is not in our database.");
+                }
+                else {
+                    Intent outcomeIntent = new Intent(RecognitionActivity.this, IdentifyOutcome.class);
+                    startActivity(outcomeIntent);
+                }
+
 
 
             } else {

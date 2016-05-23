@@ -13,6 +13,10 @@ public class Plant {
     int waterInterval;
     Date nextWater;
 
+    public Plant() {
+
+    }
+
     public Plant(String plantName, String photoPath, Date lastWater, int waterInterval) {
         this.plantName = plantName;
         this.photoPath = photoPath;
