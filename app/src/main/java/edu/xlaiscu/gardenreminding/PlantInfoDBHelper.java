@@ -112,8 +112,6 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
         super.close();
     }
 
-
-
     @Override
     public void onCreate(SQLiteDatabase db) {
         Log.v("TAG", "On create called");

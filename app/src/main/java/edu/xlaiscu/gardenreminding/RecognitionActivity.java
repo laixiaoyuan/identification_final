@@ -79,7 +79,14 @@ public class RecognitionActivity extends AppCompatActivity {
             }
         });
 
-        plantInfoDBHelper = new PlantInfoDBHelper(this);
+//        plantInfoDBHelper = new PlantInfoDBHelper(this);
+        try {
+            plantInfoDBHelper = new PlantInfoDBHelper(this);
+        }
+        catch (IOException e) {
+
+        }
+
         outcomeDBHelper = new IdentifyOutcomeDBHelper(this);
         plantNameHash = plantInfoDBHelper.fetchPlantName();
         cursor = outcomeDBHelper.fetchAll();
