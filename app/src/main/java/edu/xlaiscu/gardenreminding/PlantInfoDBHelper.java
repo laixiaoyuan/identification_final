@@ -25,7 +25,8 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
     static private final int VERSION = 2;
     static private final String DB_PACKAGENAME = "edu.xlaiscu.gardenreminding";
     static private final String DB_NAME="flowerInfo.sql";
-    static private final String DB_Path = "/data/data/" + DB_PACKAGENAME + "/databases";
+    static private String DB_Path;
+//            = "/data/data/" + DB_PACKAGENAME + "/databases";
     public SQLiteDatabase myDataBase;
     Context context;
 
@@ -44,6 +45,7 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
     public PlantInfoDBHelper(Context context) throws IOException{
         super(context, DB_NAME, null, VERSION);     // we use default cursor factory (null, 3rd arg)
         this.context = context;
+        this.DB_Path = context.getFilesDir().getPath();
         boolean dbExist = checkDataBase();
         if (dbExist) {
             openDataBase();
@@ -56,11 +58,13 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
 
     public void createDataBase() throws IOException {
         boolean dbExist = checkDataBase();
+        SQLiteDatabase db_Read = null;
         if (dbExist) {
             Toast.makeText(context, "Database exists", Toast.LENGTH_SHORT).show();
         }
         else {
-            this.getReadableDatabase();
+            db_Read = this.getReadableDatabase();
+            db_Read.close();
             try {
                 copyDataBase();
             }
@@ -74,7 +78,7 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
         boolean checkdb = false;
         try {
             String myPath = DB_Path + DB_NAME;
-            File dbfile = new File(myPath);
+            File dbfile = context.getDatabasePath(DB_NAME);
             checkdb = dbfile.exists();
         }
         catch (SQLiteException e) {
@@ -87,7 +91,7 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
     private void copyDataBase() throws IOException {
         InputStream myinput = context.getAssets().open(DB_NAME);
         String outfilename = DB_Path + DB_NAME;
-        OutputStream myoutput = new FileOutputStream("/data/data/" + DB_PACKAGENAME + "/databases/" + DB_NAME);
+        OutputStream myoutput = new FileOutputStream(outfilename);
 
         byte[] buffer = new byte[1024];
         int length;
@@ -119,6 +123,14 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        if (newVersion > oldVersion) {
+            try {
+                copyDataBase();
+            }
+            catch (IOException e) {
+
+            }
+        }
 
     }
 
