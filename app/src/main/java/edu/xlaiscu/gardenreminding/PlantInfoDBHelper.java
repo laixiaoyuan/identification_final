@@ -20,14 +20,17 @@ import java.util.Hashtable;
 
 /**
  * Created by Lexie on 5/22/16.
+ * ===========================================================================================================================================
+ * This dbhelper is not used!!! Because I can't solve the problem of "cannot find table". But this should be the more efficient way to import flower collection database.
  */
+
 public class PlantInfoDBHelper extends SQLiteOpenHelper {
     static private final int VERSION = 1;
 //    static private final String DB_PACKAGENAME = "edu.xlaiscu.gardenreminding";
     static private final String DB_NAME="flowerInfoTotal";
     static private final String DB_Path = "/data/data/edu.xlaiscu.gardenreminding/databases/";
     public SQLiteDatabase myDataBase;
-    private final Context context;
+    private final Context myContext;
 
 //    static private final String SQL_CREATE_TABLE =
 //            "CREATE TABLE plantInfo (" +
@@ -41,30 +44,36 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
 //    static private final String SQL_DROP_TABLE = "DROP TABLE plantInfo";
 
 
-    public PlantInfoDBHelper(Context context) throws IOException{
+    public PlantInfoDBHelper(Context context) {
         super(context, DB_NAME, null, VERSION);     // we use default cursor factory (null, 3rd arg)
-        this.context = context;
+        this.myContext = context;
 //        this.DB_Path = context.getFilesDir().getPath();
 //        DB_Path = context.getApplicationInfo().dataDir + "/databases/";
-        boolean dbExist = checkDataBase();
-        if (dbExist) {
-            openDataBase();
-        }
-        else {
-            createDataBase();
-        }
+//        boolean dbExist = checkDataBase();
+//        if (dbExist) {
+//            openDataBase();
+//        }
+//        else {
+//            createDataBase();
+//        }
     }
 
+    /**
+     * Creates a empty database on the system and rewrites it with your own database.
+     * */
 
     public void createDataBase() throws IOException {
         boolean dbExist = checkDataBase();
-        SQLiteDatabase db_Read = null;
+//        SQLiteDatabase db_Read = null;
         if (dbExist) {
-            Toast.makeText(context, "Database exists", Toast.LENGTH_SHORT).show();
+            Toast.makeText(myContext, "Database exists", Toast.LENGTH_SHORT).show();
         }
         else {
-            db_Read = this.getReadableDatabase();
-            db_Read.close();
+
+            //By calling this method and empty database will be created into the default system path
+            //of your application so we are gonna be able to overwrite that database with our database.
+            this.getReadableDatabase();
+//            db_Read.close();
             try {
                 copyDataBase();
             }
@@ -74,39 +83,56 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
         }
     }
 
+    /**
+     * Check if the database already exist to avoid re-copying the file each time you open the application.
+     * @return true if it exists, false if it doesn't
+     */
+
     private boolean checkDataBase() {
-        boolean checkdb = false;
+        SQLiteDatabase checkDB = null;
+//        boolean checkdb = false;
         try {
             String myPath = DB_Path + DB_NAME;
-            File dbfile = context.getDatabasePath(DB_NAME);
-            checkdb = dbfile.exists();
+//            File dbfile = context.getDatabasePath(DB_NAME);
+//            checkdb = dbfile.exists();
+            checkDB = SQLiteDatabase.openDatabase(myPath, null, SQLiteDatabase.OPEN_READONLY);
         }
         catch (SQLiteException e) {
-            Toast.makeText(context, "Database doesn't exist!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(myContext, "Database doesn't exist!", Toast.LENGTH_SHORT).show();
 
         }
-        return checkdb;
+
+        if (checkDB != null) {
+            checkDB.close();
+        }
+        return checkDB != null ? true : false;
     }
 
+    /**
+     * Copies your database from your local assets-folder to the just created empty database in the
+     * system folder, from where it can be accessed and handled.
+     * This is done by transfering bytestream.
+     * */
+
     private void copyDataBase() throws IOException {
-        InputStream myinput = context.getAssets().open(DB_NAME);
-        String outfilename = DB_Path + DB_NAME;
-        OutputStream myoutput = new FileOutputStream(outfilename);
+        InputStream myInput = myContext.getAssets().open(DB_NAME);
+        String outFileName = DB_Path + DB_NAME;
+        OutputStream myOutput = new FileOutputStream(outFileName);
 
         byte[] buffer = new byte[1024];
         int length;
-        while ((length = myinput.read(buffer)) > 0) {
-            myoutput.write(buffer, 0, length);
+        while ((length = myInput.read(buffer)) > 0) {
+            myOutput.write(buffer, 0, length);
         }
 
-        myoutput.flush();
-        myoutput.close();
-        myinput.close();
+        myOutput.flush();
+        myOutput.close();
+        myInput.close();
     }
 
     private void openDataBase() throws SQLException {
         String mypath = DB_Path + DB_NAME;
-        myDataBase = SQLiteDatabase.openDatabase(mypath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
+        myDataBase = SQLiteDatabase.openDatabase(mypath, null, SQLiteDatabase.OPEN_READONLY);
     }
 
     public synchronized void close() {
@@ -118,24 +144,31 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        db.execSQL();
         Log.v("TAG", "On create called");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        if (newVersion > oldVersion) {
-            try {
-                copyDataBase();
-            }
-            catch (IOException e) {
+//        if (newVersion > oldVersion) {
+//            try {
+//                copyDataBase();
+//            }
+//            catch (IOException e) {
+//
+//            }
+//        }
 
-            }
-        }
+        Log.w(PlantInfoDBHelper.class.getName(), "Upgrading database from version " + oldVersion  + " to "
+                + newVersion + ", which will destroy all old data");
+        db.execSQL("DROP TABLE IF EXISTS " + DB_NAME);
+        onCreate(db);
 
     }
 
-
+    public Cursor fetchAll() {
+        SQLiteDatabase db = this.getReadableDatabase();
+        return db.rawQuery("SELECT * FROM flowerInfoTotal;", null);
+    }
 
     public Hashtable<String, String> fetchPlantName() {
         Hashtable<String, String> plantNameHash = new Hashtable<String, String>();
@@ -143,7 +176,7 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
         String mypath = DB_Path + DB_NAME;
         SQLiteDatabase db = SQLiteDatabase.openDatabase(mypath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
 
-        Cursor cursor = db.rawQuery("SELECT * FROM flowerInfoTotal;", null);
+        Cursor cursor = fetchAll();
         if (cursor.moveToFirst()) {
             do {
                 plantNameHash.put(cursor.getString(cursor.getColumnIndex("name")), cursor.getString(cursor.getColumnIndex("picture")));

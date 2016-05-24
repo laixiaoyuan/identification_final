@@ -55,7 +55,7 @@ public class RecognitionActivity extends AppCompatActivity {
     private TextView tagOutput;
     private Bitmap bitmap;
 
-    PlantInfoDBHelper plantInfoDBHelper;
+    PlantCollectionDBHelper collectionDBHelper;
     IdentifyOutcomeDBHelper outcomeDBHelper;
     Hashtable<String, String> plantNameHash;
     Cursor cursor;
@@ -79,16 +79,11 @@ public class RecognitionActivity extends AppCompatActivity {
             }
         });
 
-//        plantInfoDBHelper = new PlantInfoDBHelper(this);
-        try {
-            plantInfoDBHelper = new PlantInfoDBHelper(this);
-        }
-        catch (IOException e) {
+        collectionDBHelper = new PlantCollectionDBHelper(this);
 
-        }
 
         outcomeDBHelper = new IdentifyOutcomeDBHelper(this);
-        plantNameHash = plantInfoDBHelper.fetchPlantName();
+        plantNameHash = collectionDBHelper.fetchPlantName();
         cursor = outcomeDBHelper.fetchAll();
 
         acquireRunTimePermissions();
