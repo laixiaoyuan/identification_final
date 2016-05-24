@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -210,6 +211,7 @@ public class RecognitionActivity extends AppCompatActivity {
                         plant.plantName = tagArraylist.get(i);
 
                         plant.photoPath = plantNameHash.get(tagArraylist.get(i));
+//                        plant.photoPath = bitmap.getPath
                         outcomeDBHelper.add(plant);
                         cursor.requery();
                     }
@@ -271,6 +273,7 @@ public class RecognitionActivity extends AppCompatActivity {
         intent.setAction(Intent.ACTION_GET_CONTENT);
         startActivityForResult(Intent.createChooser(intent, "Select File"), SELECT_FILE);
     }
+
 
 
     private void acquireRunTimePermissions() {

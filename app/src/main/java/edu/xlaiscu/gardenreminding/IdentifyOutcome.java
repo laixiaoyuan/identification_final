@@ -30,10 +30,7 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
     Hashtable<String, Integer> waterIntervalHash;
     ListView list;
     Plant plant;
-    String plantName;
-    String photoPath;
-    Date lastWater;
-    int waterInterval;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,7 +48,6 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
         collectionDBHelper = new PlantCollectionDBHelper(this);
         waterIntervalHash = collectionDBHelper.fetchWaterInterval();
 
-        plant = new Plant(plantName, photoPath, lastWater, waterInterval);
 
         list = (ListView) findViewById(R.id.listView);
         list.setAdapter(identifyOutcomeAdaptor);
@@ -61,6 +57,8 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+
         String plantName = identifyCursor.getString(identifyCursor.getColumnIndex("plantName"));
         String photoPath = identifyCursor.getString(identifyCursor.getColumnIndex("photoPath"));
 
@@ -68,10 +66,13 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
 
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Date date = new Date();
-        this.plantName = plantName;
-        this.photoPath = photoPath;
-        this.lastWater = date;
-        this.waterInterval = waterInterval;
+        String plantNameDB = plantName;
+        String photoPathDB = plantName;
+        Date lastWaterDB = date;
+        int waterIntervalDB = waterInterval;
+
+        plant = new Plant(plantNameDB, photoPathDB, lastWaterDB, waterIntervalDB);
+
         plantDBHelper.add(plant);
         plantCursor.requery();
 //        plantAdaptor.notifyDataSetChanged();
