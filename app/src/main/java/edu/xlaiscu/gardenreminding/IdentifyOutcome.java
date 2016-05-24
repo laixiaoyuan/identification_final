@@ -1,5 +1,6 @@
 package edu.xlaiscu.gardenreminding;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.widget.ListView;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Hashtable;
 
 public class IdentifyOutcome extends AppCompatActivity implements AdapterView.OnItemClickListener{
 
@@ -18,8 +20,11 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
     IdentifyOutcomeAdaptor identifyOutcomeAdaptor;
     IdentifyOutcomeDBHelper identifyOutcomeDBHelper;
 
+    PlantCollectionDBHelper collectionDBHelper;
+
     PlantDBHelper plantDBHelper;
-    Cursor cursor;
+    Cursor identifyCursor;
+    Hashtable<String, Integer> waterIntervalHash;
     ListView list;
     Plant plant;
 
@@ -31,8 +36,13 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
         plantDBHelper = new PlantDBHelper(this);
 
         identifyOutcomeDBHelper = new IdentifyOutcomeDBHelper(this);
-        cursor = identifyOutcomeDBHelper.fetchAll();
-        identifyOutcomeAdaptor = new IdentifyOutcomeAdaptor(this, cursor, 0);
+        identifyCursor = identifyOutcomeDBHelper.fetchAll();
+
+        collectionDBHelper = new PlantCollectionDBHelper(this);
+        waterIntervalHash = collectionDBHelper.fetchWaterInterval();
+        identifyOutcomeAdaptor = new IdentifyOutcomeAdaptor(this, identifyCursor, 0);
+
+        plant = new Plant();
 
         list = (ListView) findViewById(R.id.listView);
         list.setAdapter(identifyOutcomeAdaptor);
@@ -42,15 +52,21 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        String plantName = cursor.getString(cursor.getColumnIndex("plantName"));
-        String photoPath = cursor.getString(cursor.getColumnIndex("photoPath"));
+        String plantName = identifyCursor.getString(identifyCursor.getColumnIndex("plantName"));
+        String photoPath = identifyCursor.getString(identifyCursor.getColumnIndex("photoPath"));
+
+        int waterInterval = waterIntervalHash.get(plantName);
 
 //        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Date date = new Date();
         plant.plantName = plantName;
         plant.photoPath = photoPath;
         plant.lastWater = date;
+        plant.waterInterval = waterInterval;
         plantDBHelper.add(plant);
+
+        Intent intent = new Intent(IdentifyOutcome.this, MainActivity.class);
+        startActivity(intent);
 
     }
 

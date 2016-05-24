@@ -149,5 +149,19 @@ public class PlantCollectionDBHelper extends SQLiteOpenHelper{
         }
         return plantNameHash;
     }
+
+    public Hashtable<String, Integer> fetchWaterInterval() {
+        Hashtable<String, Integer> plantWaterInterval = new Hashtable<String, Integer>();
+        Cursor cursor = fetchAll();
+        if (cursor.moveToFirst()) {
+            do {
+                plantWaterInterval.put(cursor.getString(cursor.getColumnIndex("plantName")), cursor.getInt(cursor.getColumnIndex("waterInterval")));
+            } while (cursor.moveToNext());
+        }
+        else {
+            return null;
+        }
+        return plantWaterInterval;
+    }
 }
 
