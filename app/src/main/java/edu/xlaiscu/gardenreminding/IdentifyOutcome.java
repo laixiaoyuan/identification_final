@@ -65,13 +65,12 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
         String photoPath = identifyCursor.getString(identifyCursor.getColumnIndex("photoPath"));
 
         int waterInterval = waterIntervalHash.get(plantName);
-        String lastWaterSQL;
 
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Date date = new Date();
         this.plantName = plantName;
         this.photoPath = photoPath;
-        lastWaterSQL = dateFormat.format(date);
+        this.lastWater = date;
         this.waterInterval = waterInterval;
         plantDBHelper.add(plant);
         plantCursor.requery();
