@@ -18,11 +18,14 @@ public class IdentifyOutcomeDBHelper extends SQLiteOpenHelper{
             "CREATE TABLE outcome (" +
                     "  _id INTEGER PRIMARY KEY AUTOINCREMENT," +
                     "  plantName TEXT," +
-                    "  photoPath TEXT);";
+//                    "  plantPhotoPath TEXT," +
+                    "  imageTakePath TEXT);";
 
     static private final String SQL_DROP_TABLE = "DROP TABLE outcome";
 
     Context context;
+
+
 
     public IdentifyOutcomeDBHelper(Context context) {
         super(context, DB_NAME, null, VERSION);
@@ -31,6 +34,7 @@ public class IdentifyOutcomeDBHelper extends SQLiteOpenHelper{
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+
         db.execSQL(SQL_CREATE_TABLE);
     }
 
@@ -63,7 +67,10 @@ public class IdentifyOutcomeDBHelper extends SQLiteOpenHelper{
         SQLiteDatabase db = this.getReadableDatabase();
         ContentValues contentValues = new ContentValues();
         contentValues.put("plantName", plant.plantName);
-        contentValues.put("photoPath", plant.photoPath);
+        contentValues.put("imageTakePath", plant.photoPath);
+//        contentValues.put("plantPhotoPath", plant.plantPhotoPath);
+
+
 
         db.insert("outcome", null, contentValues);
     }

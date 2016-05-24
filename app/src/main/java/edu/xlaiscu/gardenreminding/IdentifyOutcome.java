@@ -21,16 +21,20 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
     IdentifyOutcomeDBHelper identifyOutcomeDBHelper;
     Cursor identifyCursor;
 
+
     PlantCollectionDBHelper collectionDBHelper;
 
     PlantDBHelper plantDBHelper;
 //    PlantAdaptor plantAdaptor;
     Cursor plantCursor;
 
+    Hashtable<String, String> plantPhotoHash;
     Hashtable<String, Integer> waterIntervalHash;
+
     ListView list;
     Plant plant;
-
+    int plantId;
+    Date date;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,12 +44,14 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
         plantDBHelper = new PlantDBHelper(this);
         plantCursor = plantDBHelper.fetchAll();
 //        plantAdaptor = new PlantAdaptor(this, plantCursor, 0);
+        plantId = plantDBHelper.getMaxRecID() + 1;
 
         identifyOutcomeDBHelper = new IdentifyOutcomeDBHelper(this);
         identifyCursor = identifyOutcomeDBHelper.fetchAll();
         identifyOutcomeAdaptor = new IdentifyOutcomeAdaptor(this, identifyCursor, 0);
 
         collectionDBHelper = new PlantCollectionDBHelper(this);
+        plantPhotoHash = collectionDBHelper.fetchPlantName();
         waterIntervalHash = collectionDBHelper.fetchWaterInterval();
 
 
@@ -60,18 +66,19 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
 
 
         String plantName = identifyCursor.getString(identifyCursor.getColumnIndex("plantName"));
-        String photoPath = identifyCursor.getString(identifyCursor.getColumnIndex("photoPath"));
+//        String photoPath = plantPhotoHash.get(plantName);
+        String photoPath = identifyCursor.getString(identifyCursor.getColumnIndex("imageTakePath"));
 
         int waterInterval = waterIntervalHash.get(plantName);
 
         DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Date date = new Date();
         String plantNameDB = plantName;
-        String photoPathDB = plantName;
+        String photoPathDB = photoPath;
         Date lastWaterDB = date;
         int waterIntervalDB = waterInterval;
 
-        plant = new Plant(plantNameDB, photoPathDB, lastWaterDB, waterIntervalDB);
+        plant = new Plant(plantId, plantNameDB, photoPathDB, date, waterIntervalDB, lastWaterDB);
 
         plantDBHelper.add(plant);
         plantCursor.requery();

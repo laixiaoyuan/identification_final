@@ -61,6 +61,8 @@ public class RecognitionActivity extends AppCompatActivity {
     Hashtable<String, String> plantNameHash;
     Cursor cursor;
 
+    String bitmapPath;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,6 +100,8 @@ public class RecognitionActivity extends AppCompatActivity {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == SELECT_FILE) {
                 onSelectFromGalleryResult(data);
+                bitmapPath = RealPathUtil.getRealPathFromURI_API19(this, data.getData());
+
             }
             else if (requestCode == REQUEST_CAMERA) {
                 onCaptureImageResult(data);
@@ -146,6 +150,7 @@ public class RecognitionActivity extends AppCompatActivity {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
         File destination = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), System.currentTimeMillis() + ".jpg");
+        bitmapPath = destination.getPath();
         FileOutputStream fo;
         try {
             destination.createNewFile();
@@ -210,8 +215,9 @@ public class RecognitionActivity extends AppCompatActivity {
                         Plant plant = new Plant();
                         plant.plantName = tagArraylist.get(i);
 
-                        plant.photoPath = plantNameHash.get(tagArraylist.get(i));
-//                        plant.photoPath = bitmap.getPath
+//                        plant.photoPath = plantNameHash.get(tagArraylist.get(i));
+                        plant.photoPath = bitmapPath;
+
                         outcomeDBHelper.add(plant);
                         cursor.requery();
                     }

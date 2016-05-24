@@ -17,11 +17,12 @@ public class Plant {
 
     }
 
-    public Plant(String plantName, String photoPath, Date lastWater, int waterInterval) {
+    public Plant(int id, String plantName, String photoPath, Date date, int waterInterval, Date lastWater) {
         this.plantName = plantName;
         this.photoPath = photoPath;
         this.lastWater = lastWater;
         this.waterInterval = waterInterval;
+//        this.date = new Date();
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
