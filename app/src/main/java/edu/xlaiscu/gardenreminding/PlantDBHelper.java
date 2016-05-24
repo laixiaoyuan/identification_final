@@ -72,22 +72,22 @@ public class PlantDBHelper extends SQLiteOpenHelper {
 
     public void add(Plant pi) {
         SQLiteDatabase db = this.getReadableDatabase();
-//        ContentValues contentValues = new ContentValues();
-//        contentValues.put("PlantName", pi.plantName);
-//        contentValues.put("PhotoPath", pi.photoPath);
-//        contentValues.put("WaterIntervel", pi.waterInterval);
-//        contentValues.put("LastWater", pi.lastWater.toString());
-//
-//        db.insert("plant", null, contentValues);
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("PlantName", pi.plantName);
+        contentValues.put("PhotoPath", pi.photoPath);
+        contentValues.put("WaterIntervel", pi.waterInterval);
+        contentValues.put("LastWater", pi.lastWater.toString());
+
+        db.insert("plant", null, contentValues);
 
 
-        String SQL_ADD =
-                "INSERT INTO plant (PlantName, PhotoPath, WaterInterval, LastWater) VALUES ('"
-                        + pi.plantName + "', '"
-                        + pi.photoPath + "', '"
-                        + pi.waterInterval + "', '"
-                        + pi.lastWater +"');";
-        db.execSQL(SQL_ADD);
+//        String SQL_ADD =
+//                "INSERT INTO plant (PlantName, PhotoPath, WaterInterval, LastWater) VALUES ('"
+//                        + pi.plantName + "', '"
+//                        + pi.photoPath + "', '"
+//                        + pi.waterInterval + "', '"
+//                        + pi.lastWater +"');";
+//        db.execSQL(SQL_ADD);
 
     }
 

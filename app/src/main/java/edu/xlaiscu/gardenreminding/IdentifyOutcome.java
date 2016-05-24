@@ -19,14 +19,21 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
     private int maxRecId;
     IdentifyOutcomeAdaptor identifyOutcomeAdaptor;
     IdentifyOutcomeDBHelper identifyOutcomeDBHelper;
+    Cursor identifyCursor;
 
     PlantCollectionDBHelper collectionDBHelper;
 
     PlantDBHelper plantDBHelper;
-    Cursor identifyCursor;
+//    PlantAdaptor plantAdaptor;
+    Cursor plantCursor;
+
     Hashtable<String, Integer> waterIntervalHash;
     ListView list;
     Plant plant;
+    String plantName;
+    String photoPath;
+    Date lastWater;
+    int waterInterval;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,15 +41,17 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
         setContentView(R.layout.activity_identify_outcome);
 
         plantDBHelper = new PlantDBHelper(this);
+        plantCursor = plantDBHelper.fetchAll();
+//        plantAdaptor = new PlantAdaptor(this, plantCursor, 0);
 
         identifyOutcomeDBHelper = new IdentifyOutcomeDBHelper(this);
         identifyCursor = identifyOutcomeDBHelper.fetchAll();
+        identifyOutcomeAdaptor = new IdentifyOutcomeAdaptor(this, identifyCursor, 0);
 
         collectionDBHelper = new PlantCollectionDBHelper(this);
         waterIntervalHash = collectionDBHelper.fetchWaterInterval();
-        identifyOutcomeAdaptor = new IdentifyOutcomeAdaptor(this, identifyCursor, 0);
 
-        plant = new Plant();
+        plant = new Plant(plantName, photoPath, lastWater, waterInterval);
 
         list = (ListView) findViewById(R.id.listView);
         list.setAdapter(identifyOutcomeAdaptor);
@@ -56,14 +65,18 @@ public class IdentifyOutcome extends AppCompatActivity implements AdapterView.On
         String photoPath = identifyCursor.getString(identifyCursor.getColumnIndex("photoPath"));
 
         int waterInterval = waterIntervalHash.get(plantName);
+        String lastWaterSQL;
 
-//        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
         Date date = new Date();
-        plant.plantName = plantName;
-        plant.photoPath = photoPath;
-        plant.lastWater = date;
-        plant.waterInterval = waterInterval;
+        this.plantName = plantName;
+        this.photoPath = photoPath;
+        lastWaterSQL = dateFormat.format(date);
+        this.waterInterval = waterInterval;
         plantDBHelper.add(plant);
+        plantCursor.requery();
+//        plantAdaptor.notifyDataSetChanged();
+
 
         Intent intent = new Intent(IdentifyOutcome.this, MainActivity.class);
         startActivity(intent);
