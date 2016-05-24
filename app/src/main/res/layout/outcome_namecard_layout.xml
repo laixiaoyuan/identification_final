@@ -34,11 +34,11 @@
             android:layout_alignParentBottom="false"
             android:layout_below="@+id/txtNote" />
 
-        <Button
+        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Confirm"
-            android:id="@+id/confirmButton"
+            android:text="Confirm!"
+            android:id="@+id/confirm"
             android:layout_marginRight="30dp"
             android:layout_marginEnd="30dp"
             android:layout_centerVertical="true"

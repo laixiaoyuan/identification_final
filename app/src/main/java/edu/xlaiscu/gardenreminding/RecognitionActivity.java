@@ -221,7 +221,7 @@ public class RecognitionActivity extends AppCompatActivity {
 
                 }
                 if (outcomeDBHelper.getMaxRecID() == 0) {
-                    tagOutput.setText("Cannot recognize the flower, or the flower is not in our database.");
+                    tagOutput.setText("Cannot recognize the flower, or the flower is not in our database.\n You can choose to retake picture.");
                 }
                 else {
                     Intent outcomeIntent = new Intent(RecognitionActivity.this, IdentifyOutcome.class);

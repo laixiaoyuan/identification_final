@@ -23,10 +23,9 @@ import java.util.Hashtable;
  */
 public class PlantInfoDBHelper extends SQLiteOpenHelper {
     static private final int VERSION = 2;
-    static private final String DB_PACKAGENAME = "edu.xlaiscu.gardenreminding";
+//    static private final String DB_PACKAGENAME = "edu.xlaiscu.gardenreminding";
     static private final String DB_NAME="flowerInfo.sql";
-    static private String DB_Path;
-//            = "/data/data/" + DB_PACKAGENAME + "/databases";
+    static private final String DB_Path = "/data/data/edu.xlaiscu.gardenreminding/databases/";
     public SQLiteDatabase myDataBase;
     Context context;
 
@@ -45,7 +44,8 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
     public PlantInfoDBHelper(Context context) throws IOException{
         super(context, DB_NAME, null, VERSION);     // we use default cursor factory (null, 3rd arg)
         this.context = context;
-        this.DB_Path = context.getFilesDir().getPath();
+//        this.DB_Path = context.getFilesDir().getPath();
+//        DB_Path = context.getApplicationInfo().dataDir + "/databases/";
         boolean dbExist = checkDataBase();
         if (dbExist) {
             openDataBase();

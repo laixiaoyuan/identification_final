@@ -101,29 +101,29 @@ public class PlantDBHelper extends SQLiteOpenHelper {
          */
     }
 
-    public Hashtable<String, String> fetchPlantName() {
-        Hashtable<String, String> plantNameHash = new Hashtable<String, String>();
-        SQLiteDatabase db = this.getReadableDatabase();
-
-//        Cursor result = db.query(true, "plant", new String[] {"plantName"}, null, null, null, null, null, null);
-//        if (result.moveToFirst()) {
+//    public Hashtable<String, String> fetchPlantName() {
+//        Hashtable<String, String> plantNameHash = new Hashtable<String, String>();
+//        SQLiteDatabase db = this.getReadableDatabase();
+//
+////        Cursor result = db.query(true, "plant", new String[] {"plantName"}, null, null, null, null, null, null);
+////        if (result.moveToFirst()) {
+////            do {
+////                plantNameHash.put(result.getString(result.getColumnIndex("plantName")), );
+////            } while (result.moveToNext());
+////        }
+////        else {
+////            return null;
+////        }
+////        return plantNameHash;
+//        Cursor cursor = db.rawQuery("SELECT * FROM plant;", null);
+//        if (cursor.moveToFirst()) {
 //            do {
-//                plantNameHash.put(result.getString(result.getColumnIndex("plantName")), );
-//            } while (result.moveToNext());
+//                plantNameHash.put(cursor.getString(cursor.getColumnIndex("PlantName")), cursor.getString(cursor.getColumnIndex("PhotoPath")));
+//            } while (cursor.moveToNext());
 //        }
 //        else {
 //            return null;
 //        }
 //        return plantNameHash;
-        Cursor cursor = db.rawQuery("SELECT * FROM plant;", null);
-        if (cursor.moveToFirst()) {
-            do {
-                plantNameHash.put(cursor.getString(cursor.getColumnIndex("PlantName")), cursor.getString(cursor.getColumnIndex("PhotoPath")));
-            } while (cursor.moveToNext());
-        }
-        else {
-            return null;
-        }
-        return plantNameHash;
-    }
+//    }
 }
