@@ -22,12 +22,12 @@ import java.util.Hashtable;
  * Created by Lexie on 5/22/16.
  */
 public class PlantInfoDBHelper extends SQLiteOpenHelper {
-    static private final int VERSION = 2;
+    static private final int VERSION = 1;
 //    static private final String DB_PACKAGENAME = "edu.xlaiscu.gardenreminding";
-    static private final String DB_NAME="flowerInfo.sql";
+    static private final String DB_NAME="flowerInfoTotal";
     static private final String DB_Path = "/data/data/edu.xlaiscu.gardenreminding/databases/";
     public SQLiteDatabase myDataBase;
-    Context context;
+    private final Context context;
 
 //    static private final String SQL_CREATE_TABLE =
 //            "CREATE TABLE plantInfo (" +
@@ -106,7 +106,7 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
 
     private void openDataBase() throws SQLException {
         String mypath = DB_Path + DB_NAME;
-        myDataBase = SQLiteDatabase.openDatabase(mypath, null, SQLiteDatabase.OPEN_READWRITE);
+        myDataBase = SQLiteDatabase.openDatabase(mypath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
     }
 
     public synchronized void close() {
@@ -118,6 +118,7 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
+        db.execSQL();
         Log.v("TAG", "On create called");
     }
 
@@ -134,11 +135,15 @@ public class PlantInfoDBHelper extends SQLiteOpenHelper {
 
     }
 
+
+
     public Hashtable<String, String> fetchPlantName() {
         Hashtable<String, String> plantNameHash = new Hashtable<String, String>();
-        SQLiteDatabase db = this.getReadableDatabase();
+//        SQLiteDatabase db = this.getReadableDatabase();
+        String mypath = DB_Path + DB_NAME;
+        SQLiteDatabase db = SQLiteDatabase.openDatabase(mypath, null, SQLiteDatabase.CREATE_IF_NECESSARY);
 
-        Cursor cursor = db.rawQuery("SELECT * FROM flowerInfo;", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM flowerInfoTotal;", null);
         if (cursor.moveToFirst()) {
             do {
                 plantNameHash.put(cursor.getString(cursor.getColumnIndex("name")), cursor.getString(cursor.getColumnIndex("picture")));
